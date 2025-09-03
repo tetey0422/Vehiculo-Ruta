@@ -16,7 +16,7 @@
         
         <div class="form-group">
             {{ form.placa.label(class="form-label") }}
-            {{ form.placa(class="form-control", placeholder="Ej: ABC123") }}
+            {{ form.placa(class="form-control placa-input", placeholder="Ej: ABC123") }}
             <small class="form-help">Formato: 6-8 caracteres alfanuméricos</small>
         </div>
         
@@ -115,4 +115,16 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Convertir placa a mayúsculas automáticamente
+    const placaInput = document.getElementById('placa');
+    if (placaInput) {
+        placaInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
+});
+</script>
 {% endblock %}

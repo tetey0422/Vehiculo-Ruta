@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from models import db, Vehiculo, Ruta
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectField, FloatField
-from wtforms.validators import DataRequired, Length, NumberRange
+from wtforms.validators import DataRequired, Length, NumberRange, ValidationError
 import secrets
 from dotenv import load_dotenv
 import os 
@@ -40,11 +40,32 @@ configure_app()
 # Inicializar extensiones
 db.init_app(app)
 
+# Validador personalizado para placas
+def validate_placa_format(form, field):
+    """Validador personalizado que asegura formato correcto de placa"""
+    placa = field.data.upper().strip()
+    
+    # Verificar que no esté vacía
+    if not placa:
+        raise ValidationError('La placa es obligatoria')
+    
+    # Verificar longitud
+    if len(placa) < 6 or len(placa) > 8:
+        raise ValidationError('La placa debe tener entre 6 y 8 caracteres')
+    
+    # Verificar caracteres válidos (solo letras y números)
+    if not placa.replace(' ', '').isalnum():
+        raise ValidationError('La placa solo puede contener letras y números')
+    
+    # Actualizar el campo con la versión en mayúsculas
+    field.data = placa
+
 # Formularios con validación
 class VehiculoForm(FlaskForm):
     placa = StringField('Placa', validators=[
         DataRequired(), 
-        Length(min=6, max=8, message="La placa debe tener entre 6 y 8 caracteres")
+        Length(min=6, max=8, message="La placa debe tener entre 6 y 8 caracteres"),
+        validate_placa_format
     ])
     marca = StringField('Marca', validators=[DataRequired(), Length(max=50)])
     modelo = StringField('Modelo', validators=[DataRequired(), Length(max=50)])

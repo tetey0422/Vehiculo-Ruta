@@ -14,7 +14,7 @@
         
         <div class="form-group">
             {{ form.placa.label(class="form-label") }}
-            {{ form.placa(class="form-control", placeholder="Ejemplo: ABC123", maxlength="8") }}
+            {{ form.placa(class="form-control placa-input", placeholder="Ejemplo: ABC123", maxlength="8") }}
             {% if form.placa.errors %}
                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
                     {% for error in form.placa.errors %}
@@ -115,4 +115,16 @@
         </ul>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Convertir placa a mayúsculas automáticamente
+    const placaInput = document.getElementById('placa');
+    if (placaInput) {
+        placaInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -50,32 +50,7 @@
             </a>
         </div>
     </div>
-    
-    <!-- Herramientas de sistema -->
-    <div class="system-tools" style="margin-top: 40px; padding: 25px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h3 style="margin-bottom: 20px; color: #333; text-align: center;">🔧 Herramientas del Sistema</h3>
-        
-        <div style="text-align: center;">
-            <form method="POST" action="{{ url_for('validar_estados') }}" style="display: inline-block; margin-right: 15px;">
-                <button type="submit" class="btn btn-warning" onclick="return confirm('¿Desea validar y corregir los estados de vehículos y rutas?');">
-                    🔄 Validar Estados
-                </button>
-            </form>
-            
-            <a href="{{ url_for('test') }}" class="btn btn-info">
-                🧪 Test de Conexión
-            </a>
-        </div>
-        
-        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 0.9rem; color: #666;">
-            <p><strong>💡 Información:</strong></p>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-                <li><strong>Validar Estados:</strong> Corrige inconsistencias entre estados de vehículos y rutas</li>
-                <li><strong>Test de Conexión:</strong> Verifica que la aplicación esté funcionando correctamente</li>
-            </ul>
-        </div>
-    </div>
-    
+
     <!-- Resumen del sistema -->
     <div class="system-summary" style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; text-align: center;">
         <h3 style="margin-bottom: 15px;">📈 Resumen del Sistema</h3>
