@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Rutas - VconRuta{% endblock %}
+
+{% block content %}
+<div class="lista-container">
+    <div class="lista-header">
+        <h2>🗺️ Lista de Rutas</h2>
+        <a href="{{ url_for('nueva_ruta') }}" class="btn btn-success">
+            ➕ Agregar Ruta
+        </a>
+    </div>
+    
+    <!-- Buscador -->
+    <div class="search-container" style="margin-bottom: 30px;">
+        <form method="GET" style="display: flex; gap: 10px; max-width: 500px;">
+            <input type="text" 
+                   name="search" 
+                   placeholder="Buscar por nombre, origen o destino..." 
+                   value="{{ search }}"
+                   style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+            <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+            {% if search %}
+                <a href="{{ url_for('listar_rutas') }}" class="btn btn-warning">❌ Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if rutas.items %}
+        <div class="cards-grid">
+            {% for ruta in rutas.items %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3>{{ ruta.nombre }}</h3>
+                        <span class="status-badge status-{{ ruta.estado.lower().replace(' ', '-') }}">
+                            {{ ruta.estado }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="route-info">
+                            <p><strong>📍 Origen:</strong> {{ ruta.origen }}</p>
+                            <p><strong>🎯 Destino:</strong> {{ ruta.destino }}</p>
+                            <p><strong>📏 Distancia:</strong> {{ ruta.distancia }} km</p>
+                            <p><strong>⏱️ Tiempo estimado:</strong> {{ ruta.tiempo_estimado }} minutos</p>
+                            
+                            {% if ruta.vehiculo_asignado %}
+                                <p><strong>🚗 Vehículo:</strong> 
+                                   <a href="{{ url_for('detalle_vehiculo', id=ruta.vehiculo_asignado.id) }}" 
+                                      style="color: #007bff; text-decoration: none;">
+                                      {{ ruta.vehiculo_asignado.placa }} ({{ ruta.vehiculo_asignado.marca }} {{ ruta.vehiculo_asignado.modelo }})
+                                   </a>
+                                </p>
+                            {% else %}
+                                <p><strong>🚗 Vehículo:</strong> <span style="color: #999;">Sin asignar</span></p>
+                            {% endif %}
+                            
+                            <p><strong>📅 Creada:</strong> {{ ruta.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                            {% if ruta.fecha_actualizacion != ruta.fecha_creacion %}
+                                <p><strong>🔄 Actualizada:</strong> {{ ruta.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Información de tiempos si están disponibles -->
+                        {% if ruta.fecha_inicio or ruta.fecha_fin %}
+                            <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9rem;">
+                                <p><strong>⏰ Tiempos de Ejecución:</strong></p>
+                                {% if ruta.fecha_inicio %}
+                                    <p>• Inicio: {{ ruta.fecha_inicio.strftime('%d/%m/%Y %H:%M') }}</p>
+                                {% endif %}
+                                {% if ruta.fecha_fin %}
+                                    <p>• Fin: {{ ruta.fecha_fin.strftime('%d/%m/%Y %H:%M') }}</p>
+                                {% endif %}
+                                {% if ruta.duracion_real %}
+                                    <p>• Duración real: {{ ruta.duracion_real }} minutos</p>
+                                {% endif %}
+                                {% if ruta.velocidad_promedio %}
+                                    <p>• Velocidad promedio: {{ ruta.velocidad_promedio }} km/h</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Estadísticas adicionales -->
+                        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9rem;">
+                            <p><strong>📊 Información adicional:</strong></p>
+                            <p>• ID: #{{ ruta.id }}</p>
+                            {% if ruta.tiempo_estimado > 0 %}
+                                <p>• Velocidad estimada: {{ "%.1f"|format(ruta.distancia / (ruta.tiempo_estimado / 60)) }} km/h</p>
+                            {% endif %}
+                            <p>• Descripción: {{ ruta.descripcion_completa }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <a href="{{ url_for('detalle_ruta', id=ruta.id) }}" 
+                           class="btn btn-info btn-sm">👁️ Ver Detalle</a>
+                        <a href="{{ url_for('editar_ruta', id=ruta.id) }}" 
+                           class="btn btn-warning btn-sm">✏️ Editar</a>
+                        
+                        <!-- Acciones especiales según el estado -->
+                        {% if ruta.estado == 'Programada' %}
+                            <button data-ruta-id="{{ ruta.id }}" class="btn btn-success btn-sm btn-iniciar-ruta">
+                                🚀 Iniciar Ruta
+                            </button>
+                        {% elif ruta.estado == 'En curso' %}
+                            <button data-ruta-id="{{ ruta.id }}" class="btn btn-primary btn-sm btn-completar-ruta">
+                                ✅ Completar
+                            </button>
+                            <button data-ruta-id="{{ ruta.id }}" class="btn btn-danger btn-sm btn-cancelar-ruta">
+                                ❌ Cancelar
+                            </button>
+                        {% endif %}
+                        
+                        <form method="POST" 
+                              action="{{ url_for('eliminar_ruta', id=ruta.id) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('¿Está seguro de eliminar la ruta {{ ruta.nombre }}?\\n\\nEsta acción no se puede deshacer.');">
+                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación -->
+        {% if rutas.pages > 1 %}
+            <div class="pagination-container" style="margin-top: 30px; text-align: center;">
+                <div style="display: inline-flex; gap: 5px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    {% if rutas.has_prev %}
+                        <a href="{{ url_for('listar_rutas', page=rutas.prev_num, search=search) }}" 
+                           class="btn btn-info btn-sm">« Anterior</a>
+                    {% endif %}
+                    
+                    {% for page_num in rutas.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != rutas.page %}
+                                <a href="{{ url_for('listar_rutas', page=page_num, search=search) }}" 
+                                   class="btn btn-info btn-sm">{{ page_num }}</a>
+                            {% else %}
+                                <span class="btn btn-primary btn-sm">{{ page_num }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="btn btn-sm" style="background: #f8f9fa; color: #6c757d;">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if rutas.has_next %}
+                        <a href="{{ url_for('listar_rutas', page=rutas.next_num, search=search) }}" 
+                           class="btn btn-info btn-sm">Siguiente »</a>
+                    {% endif %}
+                </div>
+                
+                <p style="margin-top: 15px; color: #666;">
+                    Mostrando {{ rutas.per_page * (rutas.page - 1) + 1 }} - 
+                    {{ rutas.per_page * rutas.page if rutas.page < rutas.pages else rutas.total }} 
+                    de {{ rutas.total }} rutas
+                    {% if search %} (filtrado por "{{ search }}"){% endif %}
+                </p>
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="empty-state" style="text-align: center; padding: 60px 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            {% if search %}
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>
+                <h3 style="color: #666; margin-bottom: 15px;">No se encontraron rutas</h3>
+                <p style="color: #999; margin-bottom: 25px;">
+                    No hay rutas que coincidan con "<strong>{{ search }}</strong>"
+                </p>
+                <a href="{{ url_for('listar_rutas') }}" class="btn btn-info">Ver todas las rutas</a>
+            {% else %}
+                <div style="font-size: 4rem; margin-bottom: 20px;">🗺️</div>
+                <h3 style="color: #666; margin-bottom: 15px;">No hay rutas registradas</h3>
+                <p style="color: #999; margin-bottom: 25px;">
+                    Comienza creando tu primera ruta en el sistema
+                </p>
+                <a href="{{ url_for('nueva_ruta') }}" class="btn btn-success">
+                    ➕ Crear primera ruta
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Información adicional -->
+<div style="margin-top: 30px; padding: 20px; background: #e9ecef; border-radius: 10px;">
+    <h4 style="margin-bottom: 15px; color: #495057;">📋 Estados de Rutas</h4>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-programada">Programada</span>
+            <span style="font-size: 0.9rem; color: #666;">Lista para iniciar</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-en-curso">En curso</span>
+            <span style="font-size: 0.9rem; color: #666;">Ejecutándose ahora</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-completada">Completada</span>
+            <span style="font-size: 0.9rem; color: #666;">Finalizada exitosamente</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-cancelada">Cancelada</span>
+            <span style="font-size: 0.9rem; color: #666;">No completada</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones para manejo de estados de rutas
+function iniciarRuta(rutaId) {
+    if (confirm('¿Desea iniciar esta ruta?\n\nEsto cambiará el estado del vehículo asignado a "En Ruta".')) {
+        // Aquí puedes implementar una llamada AJAX o un formulario
+        alert('Funcionalidad en desarrollo. Por ahora usa "Editar" para cambiar el estado.');
+    }
+}
+
+function completarRuta(rutaId) {
+    if (confirm('¿Desea marcar esta ruta como completada?\n\nEsto liberará el vehículo asignado.')) {
+        // Aquí puedes implementar una llamada AJAX o un formulario
+        alert('Funcionalidad en desarrollo. Por ahora usa "Editar" para cambiar el estado.');
+    }
+}
+
+function cancelarRuta(rutaId) {
+    if (confirm('¿Desea cancelar esta ruta?\n\nEsta acción liberará el vehículo asignado.')) {
+        // Aquí puedes implementar una llamada AJAX o un formulario
+        alert('Funcionalidad en desarrollo. Por ahora usa "Editar" para cambiar el estado.');
+    }
+}
+
+// Event listeners para los botones
+document.addEventListener('DOMContentLoaded', function() {
+    // Botones de iniciar ruta
+    document.querySelectorAll('.btn-iniciar-ruta').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const rutaId = this.getAttribute('data-ruta-id');
+            iniciarRuta(parseInt(rutaId));
+        });
+    });
+    
+    // Botones de completar ruta
+    document.querySelectorAll('.btn-completar-ruta').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const rutaId = this.getAttribute('data-ruta-id');
+            completarRuta(parseInt(rutaId));
+        });
+    });
+    
+    // Botones de cancelar ruta
+    document.querySelectorAll('.btn-cancelar-ruta').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const rutaId = this.getAttribute('data-ruta-id');
+            cancelarRuta(parseInt(rutaId));
+        });
+    });
+});
+</script>
+{% endblock %}

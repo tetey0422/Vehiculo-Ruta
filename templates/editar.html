@@ -1,0 +1,17 @@
+{%extends 'base.html' %}
+
+{% block title%} Editar Usuario {%endblock%}
+
+{%block content%}
+<h2>Editar Usuario</h2>
+<form method="POST">
+    <label > nombre</label>
+    <input type="text" name="nombre" required> <br><br>
+
+    <label > edad</label>
+    <input type="number" name="edad"  required> <br><br>
+
+    <input type="submit" value="Actualizar"><br><br>
+</form>
+<a href="{{ url_for('index')}}">volver</a>
+{%endblock%}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Vehículo - VconRuta{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2>✏️ Editar Vehículo</h2>
+        <a href="{{ url_for('listar_vehiculos') }}" class="btn btn-info">
+            ⬅️ Volver a Vehículos
+        </a>
+    </div>
+    
+    <form method="POST" class="modern-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.placa.label(class="form-label") }}
+            {{ form.placa(class="form-control", placeholder="Ej: ABC123") }}
+            <small class="form-help">Formato: 6-8 caracteres alfanuméricos</small>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form.marca.label(class="form-label") }}
+                {{ form.marca(class="form-control", placeholder="Ej: Toyota") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.modelo.label(class="form-label") }}
+                {{ form.modelo(class="form-control", placeholder="Ej: Corolla") }}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                {{ form.anio.label(class="form-label") }}
+                {{ form.anio(class="form-control", min="1990", max="2025") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.capacidad.label(class="form-label") }}
+                {{ form.capacidad(class="form-control", min="1", max="100") }}
+                <small class="form-help">Número de pasajeros</small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.estado.label(class="form-label") }}
+            {{ form.estado(class="form-control") }}
+            {% if vehiculo.tiene_rutas_activas %}
+                <small class="form-help" style="color: #d32f2f;">
+                    ⚠️ Este vehículo tiene rutas activas. No se puede cambiar a "Disponible".
+                </small>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+            <a href="{{ url_for('listar_vehiculos') }}" class="btn btn-warning">❌ Cancelar</a>
+        </div>
+    </form>
+    
+    <!-- Información del vehículo -->
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+        <h4 style="margin-bottom: 15px; color: #495057;">📋 Información actual</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 0.9rem;">
+            <div>
+                <strong>ID:</strong> #{{ vehiculo.id }}
+            </div>
+            <div>
+                <strong>Edad:</strong> {{ vehiculo.edad }} años
+            </div>
+            <div>
+                <strong>Registrado:</strong> {{ vehiculo.fecha_registro.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            <div>
+                <strong>Última actualización:</strong> {{ vehiculo.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            <div>
+                <strong>Estado actual:</strong> 
+                <span class="status-badge status-{{ vehiculo.estado.lower().replace(' ', '-') }}">
+                    {{ vehiculo.estado }}
+                </span>
+            </div>
+            <div>
+                <strong>Rutas asignadas:</strong> {{ vehiculo.rutas|length }}
+                {% if vehiculo.tiene_rutas_activas %}
+                    <span style="color: #d32f2f;">(tiene rutas activas)</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rutas asociadas -->
+    {% if vehiculo.rutas %}
+        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 10px;">
+            <h4 style="margin-bottom: 15px; color: #1976d2;">🗺️ Rutas asociadas</h4>
+            <div style="max-height: 300px; overflow-y: auto;">
+                {% for ruta in vehiculo.rutas %}
+                    <div style="padding: 10px; margin-bottom: 10px; background: white; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>{{ ruta.nombre }}</strong><br>
+                            <small>{{ ruta.origen }} → {{ ruta.destino }}</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="status-badge status-{{ ruta.estado.lower().replace(' ', '-') }}">
+                                {{ ruta.estado }}
+                            </span><br>
+                            <small>{{ ruta.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Nuevo Vehículo - VconRuta{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #333; margin-bottom: 10px;">🚗 Agregar Nuevo Vehículo</h2>
+        <p style="color: #666;">Completa la información del vehículo</p>
+    </div>
+    
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.placa.label(class="form-label") }}
+            {{ form.placa(class="form-control", placeholder="Ejemplo: ABC123", maxlength="8") }}
+            {% if form.placa.errors %}
+                <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                    {% for error in form.placa.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                {{ form.marca.label(class="form-label") }}
+                {{ form.marca(class="form-control", placeholder="Ejemplo: Toyota") }}
+                {% if form.marca.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.marca.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.modelo.label(class="form-label") }}
+                {{ form.modelo(class="form-control", placeholder="Ejemplo: Hiace") }}
+                {% if form.modelo.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.modelo.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                {{ form.anio.label(class="form-label") }}
+                {{ form.anio(class="form-control", placeholder="Ejemplo: 2020", min="1990", max="2025") }}
+                {% if form.anio.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.anio.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.capacidad.label(class="form-label") }}
+                {{ form.capacidad(class="form-control", placeholder="Ejemplo: 15", min="1", max="100") }}
+                {% if form.capacidad.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.capacidad.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.estado.label(class="form-label") }}
+            {{ form.estado(class="form-control") }}
+            {% if form.estado.errors %}
+                <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                    {% for error in form.estado.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div style="font-size: 0.875rem; color: #666; margin-top: 5px;">
+                <strong>Estados disponibles:</strong><br>
+                • <strong>Disponible:</strong> Listo para ser asignado a rutas<br>
+                • <strong>En Ruta:</strong> Actualmente ejecutando un viaje<br>
+                • <strong>Mantenimiento:</strong> No disponible por reparación/revisión
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('listar_vehiculos') }}" class="btn btn-warning">
+                ← Cancelar
+            </a>
+            <button type="submit" class="btn btn-success">
+                ✅ Guardar Vehículo
+            </button>
+        </div>
+    </form>
+    
+    <!-- Información adicional -->
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8;">
+        <h5 style="color: #17a2b8; margin-bottom: 10px;">💡 Consejos para el registro</h5>
+        <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 0.9rem;">
+            <li><strong>Placa:</strong> Usar el formato oficial sin espacios ni guiones</li>
+            <li><strong>Marca y Modelo:</strong> Ser específico para mejor identificación</li>
+            <li><strong>Capacidad:</strong> Número máximo de pasajeros permitidos</li>
+            <li><strong>Estado inicial:</strong> Generalmente "Disponible" para vehículos nuevos</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

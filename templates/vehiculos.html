@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Vehículos - VconRuta{% endblock %}
+
+{% block content %}
+<div class="lista-container">
+    <div class="lista-header">
+        <h2>🚗 Lista de Vehículos</h2>
+        <a href="{{ url_for('nuevo_vehiculo') }}" class="btn btn-success">
+            ➕ Agregar Vehículo
+        </a>
+    </div>
+    
+    <!-- Buscador -->
+    <div class="search-container" style="margin-bottom: 30px;">
+        <form method="GET" style="display: flex; gap: 10px; max-width: 500px;">
+            <input type="text" 
+                   name="search" 
+                   placeholder="Buscar por placa, marca o modelo..." 
+                   value="{{ search }}"
+                   style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+            <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+            {% if search %}
+                <a href="{{ url_for('listar_vehiculos') }}" class="btn btn-warning">❌ Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if vehiculos.items %}
+        <div class="cards-grid">
+            {% for vehiculo in vehiculos.items %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3>{{ vehiculo.placa }}</h3>
+                        <span class="status-badge status-{{ vehiculo.estado.lower().replace(' ', '-') }}">
+                            {{ vehiculo.estado }}
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="vehicle-info">
+                            <p><strong>🚗 Marca:</strong> {{ vehiculo.marca }}</p>
+                            <p><strong>📋 Modelo:</strong> {{ vehiculo.modelo }}</p>
+                            <p><strong>📅 Año:</strong> {{ vehiculo.anio }} ({{ vehiculo.edad }} años)</p>
+                            <p><strong>👥 Capacidad:</strong> {{ vehiculo.capacidad }} pasajeros</p>
+                            <p><strong>📅 Registrado:</strong> {{ vehiculo.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
+                            {% if vehiculo.fecha_actualizacion != vehiculo.fecha_registro %}
+                                <p><strong>🔄 Actualizado:</strong> {{ vehiculo.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Información de rutas -->
+                        {% if vehiculo.rutas %}
+                            <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9rem;">
+                                <p><strong>🗺️ Rutas asociadas:</strong> {{ vehiculo.rutas|length }}</p>
+                                {% for ruta in vehiculo.rutas[:3] %}
+                                    <p>• {{ ruta.nombre }} 
+                                       <span class="status-badge status-{{ ruta.estado.lower().replace(' ', '-') }}" style="font-size: 0.8rem;">
+                                           {{ ruta.estado }}
+                                       </span>
+                                    </p>
+                                {% endfor %}
+                                {% if vehiculo.rutas|length > 3 %}
+                                    <p>• ... y {{ vehiculo.rutas|length - 3 }} más</p>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9rem;">
+                                <p><strong>🗺️ Rutas:</strong> <span style="color: #999;">Sin rutas asignadas</span></p>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Estadísticas adicionales -->
+                        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.9rem;">
+                            <p><strong>📊 Información adicional:</strong></p>
+                            <p>• ID: #{{ vehiculo.id }}</p>
+                            <p>• Puede ser asignado: {{ "✅ Sí" if vehiculo.puede_ser_asignado() else "❌ No" }}</p>
+                            <p>• Tiene rutas activas: {{ "✅ Sí" if vehiculo.tiene_rutas_activas else "❌ No" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" 
+                           class="btn btn-info btn-sm">👁️ Ver Detalle</a>
+                        <a href="{{ url_for('editar_vehiculo', id=vehiculo.id) }}" 
+                           class="btn btn-warning btn-sm">✏️ Editar</a>
+                        
+                        <form method="POST" 
+                              action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('¿Está seguro de eliminar el vehículo {{ vehiculo.placa }}?\\n\\nEsta acción no se puede deshacer.');">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    {% if vehiculo.tiene_rutas_activas or vehiculo.rutas %}disabled{% endif %}>
+                                🗑️ Eliminar
+                            </button>
+                        </form>
+                        
+                        {% if vehiculo.tiene_rutas_activas or vehiculo.rutas %}
+                            <small style="display: block; color: #666; margin-top: 5px;">
+                                No se puede eliminar: tiene rutas asociadas
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación -->
+        {% if vehiculos.pages > 1 %}
+            <div class="pagination-container" style="margin-top: 30px; text-align: center;">
+                <div style="display: inline-flex; gap: 5px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    {% if vehiculos.has_prev %}
+                        <a href="{{ url_for('listar_vehiculos', page=vehiculos.prev_num, search=search) }}" 
+                           class="btn btn-info btn-sm">« Anterior</a>
+                    {% endif %}
+                    
+                    {% for page_num in vehiculos.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != vehiculos.page %}
+                                <a href="{{ url_for('listar_vehiculos', page=page_num, search=search) }}" 
+                                   class="btn btn-info btn-sm">{{ page_num }}</a>
+                            {% else %}
+                                <span class="btn btn-primary btn-sm">{{ page_num }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="btn btn-sm" style="background: #f8f9fa; color: #6c757d;">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if vehiculos.has_next %}
+                        <a href="{{ url_for('listar_vehiculos', page=vehiculos.next_num, search=search) }}" 
+                           class="btn btn-info btn-sm">Siguiente »</a>
+                    {% endif %}
+                </div>
+                
+                <p style="margin-top: 15px; color: #666;">
+                    Mostrando {{ vehiculos.per_page * (vehiculos.page - 1) + 1 }} - 
+                    {{ vehiculos.per_page * vehiculos.page if vehiculos.page < vehiculos.pages else vehiculos.total }} 
+                    de {{ vehiculos.total }} vehículos
+                    {% if search %} (filtrado por "{{ search }}"){% endif %}
+                </p>
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="empty-state" style="text-align: center; padding: 60px 20px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            {% if search %}
+                <div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>
+                <h3 style="color: #666; margin-bottom: 15px;">No se encontraron vehículos</h3>
+                <p style="color: #999; margin-bottom: 25px;">
+                    No hay vehículos que coincidan con "<strong>{{ search }}</strong>"
+                </p>
+                <a href="{{ url_for('listar_vehiculos') }}" class="btn btn-info">Ver todos los vehículos</a>
+            {% else %}
+                <div style="font-size: 4rem; margin-bottom: 20px;">🚗</div>
+                <h3 style="color: #666; margin-bottom: 15px;">No hay vehículos registrados</h3>
+                <p style="color: #999; margin-bottom: 25px;">
+                    Comienza registrando tu primer vehículo en el sistema
+                </p>
+                <a href="{{ url_for('nuevo_vehiculo') }}" class="btn btn-success">
+                    ➕ Registrar primer vehículo
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Información adicional -->
+<div style="margin-top: 30px; padding: 20px; background: #e9ecef; border-radius: 10px;">
+    <h4 style="margin-bottom: 15px; color: #495057;">📋 Estados de Vehículos</h4>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-disponible">Disponible</span>
+            <span style="font-size: 0.9rem; color: #666;">Listo para asignar rutas</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-en-ruta">En Ruta</span>
+            <span style="font-size: 0.9rem; color: #666;">Ejecutando ruta activa</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge status-mantenimiento">Mantenimiento</span>
+            <span style="font-size: 0.9rem; color: #666;">No disponible temporalmente</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

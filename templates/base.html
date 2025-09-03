@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VconRuta{% endblock %}</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>🚛 VconRuta</h1>
+            <nav class="nav-links">
+                <a href="{{ url_for('index') }}">🏠 Inicio</a>
+                <a href="{{ url_for('listar_vehiculos') }}">🚗 Vehículos</a>
+                <a href="{{ url_for('listar_rutas') }}">🗺️ Rutas</a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}
+        {% endblock %}
+    <footer>
+        <p>&copy; {{ moment().year if moment else '2024' }} VconRuta - Todos los derechos reservados</p>
+    </footer>
+</body>
+
+</html>

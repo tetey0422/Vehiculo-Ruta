@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Ruta - VconRuta{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #333; margin-bottom: 10px;">🗺️ Crear Nueva Ruta</h2>
+        <p style="color: #666;">Define una nueva ruta de transporte</p>
+    </div>
+    
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.nombre.label(class="form-label") }}
+            {{ form.nombre(class="form-control", placeholder="Ejemplo: Ruta Centro - Universidad") }}
+            {% if form.nombre.errors %}
+                <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                    {% for error in form.nombre.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                {{ form.origen.label(class="form-label") }}
+                {{ form.origen(class="form-control", placeholder="Ejemplo: Terminal Central") }}
+                {% if form.origen.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.origen.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.destino.label(class="form-label") }}
+                {{ form.destino(class="form-control", placeholder="Ejemplo: Universidad Nacional") }}
+                {% if form.destino.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.destino.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                {{ form.distancia.label(class="form-label") }}
+                <div style="position: relative;">
+                    {{ form.distancia(class="form-control", placeholder="15.5", step="0.1", min="0.1") }}
+                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666;">km</span>
+                </div>
+                {% if form.distancia.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.distancia.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.tiempo_estimado.label(class="form-label") }}
+                <div style="position: relative;">
+                    {{ form.tiempo_estimado(class="form-control", placeholder="45", min="1") }}
+                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666;">min</span>
+                </div>
+                {% if form.tiempo_estimado.errors %}
+                    <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                        {% for error in form.tiempo_estimado.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.vehiculo_id.label(class="form-label") }}
+            {{ form.vehiculo_id(class="form-control", id="vehiculo_select") }}
+            {% if form.vehiculo_id.errors %}
+                <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                    {% for error in form.vehiculo_id.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div style="font-size: 0.875rem; color: #666; margin-top: 5px;">
+                Solo se muestran vehículos disponibles. Si no hay vehículos disponibles, puedes crear la ruta sin asignar y asignar después.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.estado.label(class="form-label") }}
+            {{ form.estado(class="form-control", id="estado_select") }}
+            {% if form.estado.errors %}
+                <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">
+                    {% for error in form.estado.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div style="font-size: 0.875rem; color: #666; margin-top: 5px;">
+                <strong>Estados disponibles:</strong><br>
+                • <strong>Programada:</strong> Lista para iniciar cuando sea necesario<br>
+                • <strong>En curso:</strong> Se ejecuta inmediatamente (requiere vehículo asignado)<br>
+                • <strong>Completada:</strong> Ruta finalizada<br>
+                • <strong>Cancelada:</strong> Ruta cancelada
+            </div>
+        </div>
+        
+        <!-- Advertencia para estado "En curso" -->
+        <div id="warning_en_curso" style="display: none; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; margin: 15px 0;">
+            <strong>⚠️ Advertencia:</strong> Si seleccionas "En curso", el vehículo asignado cambiará automáticamente a estado "En Ruta".
+        </div>
+        
+        <!-- Calculadora de velocidad -->
+        <div style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+            <h5 style="color: #1976d2; margin-bottom: 10px;">🧮 Calculadora de Velocidad</h5>
+            <div id="velocidad_info" style="font-size: 0.9rem; color: #666;">
+                Ingresa la distancia y tiempo estimado para ver la velocidad promedio calculada
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('listar_rutas') }}" class="btn btn-warning">
+                ← Cancelar
+            </a>
+            <button type="submit" class="btn btn-success">
+                ✅ Crear Ruta
+            </button>
+        </div>
+    </form>
+    
+    <!-- Información adicional -->
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
+        <h5 style="color: #28a745; margin-bottom: 10px;">💡 Consejos para crear rutas</h5>
+        <ul style="margin: 0; padding-left: 20px; color: #666; font-size: 0.9rem;">
+            <li><strong>Nombre:</strong> Use un nombre descriptivo que identifique fácilmente la ruta</li>
+            <li><strong>Origen y Destino:</strong> Sean específicos con las ubicaciones</li>
+            <li><strong>Distancia:</strong> Puede usar herramientas como Google Maps para medirla</li>
+            <li><strong>Tiempo:</strong> Considere tráfico, paradas y condiciones normales</li>
+            <li><strong>Asignación:</strong> Puede crear la ruta sin vehículo y asignar después</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const estadoSelect = document.getElementById('estado_select');
+    const vehiculoSelect = document.getElementById('vehiculo_select');
+    const warningDiv = document.getElementById('warning_en_curso');
+    const distanciaInput = document.querySelector('input[name="distancia"]');
+    const tiempoInput = document.querySelector('input[name="tiempo_estimado"]');
+    const velocidadInfo = document.getElementById('velocidad_info');
+    
+    // Mostrar advertencia para estado "En curso"
+    function toggleWarning() {
+        if (estadoSelect.value === 'En curso') {
+            warningDiv.style.display = 'block';
+            if (vehiculoSelect.value === '0') {
+                warningDiv.innerHTML = '<strong>❌ Error:</strong> Debes asignar un vehículo para poner la ruta "En curso".';
+                warningDiv.style.background = '#f8d7da';
+                warningDiv.style.borderColor = '#f5c6cb';
+            } else {
+                warningDiv.innerHTML = '<strong>⚠️ Advertencia:</strong> El vehículo asignado cambiará automáticamente a estado "En Ruta".';
+                warningDiv.style.background = '#fff3cd';
+                warningDiv.style.borderColor = '#ffeaa7';
+            }
+        } else {
+            warningDiv.style.display = 'none';
+        }
+    }
+    
+    // Calcular velocidad promedio
+    function calcularVelocidad() {
+        const distancia = parseFloat(distanciaInput.value);
+        const tiempo = parseInt(tiempoInput.value);
+        
+        if (distancia > 0 && tiempo > 0) {
+            const velocidad = (distancia / (tiempo / 60)).toFixed(1);
+            velocidadInfo.innerHTML = `
+                <strong>📊 Velocidad promedio calculada: ${velocidad} km/h</strong><br>
+                <small>Basado en ${distancia} km en ${tiempo} minutos</small>
+            `;
+            velocidadInfo.style.color = '#1976d2';
+            
+            // Advertencias sobre velocidad
+            if (velocidad > 80) {
+                velocidadInfo.innerHTML += '<br><small style="color: #d32f2f;">⚠️ Velocidad alta para transporte urbano</small>';
+            } else if (velocidad < 10) {
+                velocidadInfo.innerHTML += '<br><small style="color: #f57c00;">⚠️ Velocidad muy baja, revisa los datos</small>';
+            }
+        } else {
+            velocidadInfo.innerHTML = 'Ingresa la distancia y tiempo estimado para ver la velocidad promedio calculada';
+            velocidadInfo.style.color = '#666';
+        }
+    }
+    
+    // Event listeners
+    estadoSelect.addEventListener('change', toggleWarning);
+    vehiculoSelect.addEventListener('change', toggleWarning);
+    distanciaInput.addEventListener('input', calcularVelocidad);
+    tiempoInput.addEventListener('input', calcularVelocidad);
+    
+    // Ejecutar al cargar
+    toggleWarning();
+    calcularVelocidad();
+});
+</script>
+{% endblock %}
